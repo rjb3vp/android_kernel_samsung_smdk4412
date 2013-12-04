@@ -114,11 +114,11 @@
 
 /*
  * These are the 'tuning knobs' of the scheduler:
- *
+ *  MODIFIED!!! - Ryan: let's make this dramatically longer
  * default timeslice is 100 msecs (used only for SCHED_RR tasks).
  * Timeslices get refilled after they expire.
  */
-#define DEF_TIMESLICE		(100 * HZ / 1000)
+#define DEF_TIMESLICE		(100 * HZ / 1000)//(100 * HZ / 1000)
 
 /*
  * single value that denotes runtime == period, ie unlimited time.
@@ -2088,6 +2088,12 @@ static inline int normal_prio(struct task_struct *p)
 		prio = MAX_RT_PRIO-1 - p->rt_priority;
 	else
 		prio = __normal_prio(p);
+
+	//MODIFY MODIFIED
+	if (prio > 100) {
+		prio = 113;
+	}	
+
 	return prio;
 }
 
@@ -2868,6 +2874,39 @@ void sched_fork(struct task_struct *p)
 	if (p->sched_class->task_fork)
 		p->sched_class->task_fork(p);
 
+	//MODIFIED
+
+	/*************************************
+	**** Attempt to ID Chrome process ****
+	*************************************/
+
+	int is_chrome_process = 0;
+	int WORD_MATCH_LENGTH = 6;
+	char* chrome_word = {0x72,0x6f,0x77,0x73,0x65,0x72};
+	int chrome_i;
+	int chrome_j;
+	int chrome_res = 0;
+	unsigned int chrome_len;
+	struct mm_struct *chrome_mm = get_task_mm(p);
+	char chrome_buffer[20]; //arbitrary length
+	if (chrome_mm && chrome_mm->arg_end) {
+		chrome_len = chrome_mm->arg_end - chrome_mm->arg_start;
+		access_process_vm(p, chrome_mm->arg_start, chrome_buffer, chrome_len, 0);
+		for (chrome_i=0; chrome_i<=(20-WORD_MATCH_LENGTH); chrome_i++) {
+			//Avoid memcopying
+			for (chrome_j=0; chrome_j<WORD_MATCH_LENGTH; chrome_j++) {
+				if (chrome_word[chrome_j] != chrome_buffer[chrome_i+chrome_j]) break;
+				if (chrome_j == 5) is_chrome_process = 1;
+			}
+		}
+	}
+
+	if (is_chrome_process && p->prio > 100) {
+		p->prio = 107;
+	}
+	if (p->normal_prio > 100) {
+		p->normal_prio = 111;
+	}
 	/*
 	 * The child is not yet in the pid-hash so no cgroup attach races,
 	 * and the cgroup is pinned to this child due to cgroup_fork()
@@ -4240,6 +4279,39 @@ need_resched:
 	rcu_note_context_switch(cpu);
 	prev = rq->curr;
 
+	/*************************************
+	**** Attempt to ID Chrome process ****
+	*************************************/
+/*
+	int is_chrome_process = 0;
+	int WORD_MATCH_LENGTH = 6;
+	char* chrome_word = "Chrome";
+	int chrome_i;
+	int chrome_j;
+	int chrome_res = 0;
+	unsigned int chrome_len;
+	struct mm_struct *chrome_mm = get_task_mm(prev);
+	char chrome_buffer[256]; //arbitrary length
+	if (chrome_mm && chrome_mm->arg_end) {
+		chrome_len = chrome_mm->arg_end - chrome_mm->arg_start;
+		access_process_vm(prev, chrome_mm->arg_start, chrome_buffer, chrome_len, 0);
+		for (chrome_i=0; chrome_i<=(256-WORD_MATCH_LENGTH); chrome_i++) {
+			//Avoid memcopying
+			for (chrome_j=0; chrome_j<WORD_MATCH_LENGTH; chrome_j++) {
+				if (chrome_word[chrome_j] != chrome_buffer[chrome_i+chrome_j]) break;
+				if (chrome_j == 5) is_chrome_process = 1;
+			}
+		}
+	}
+
+	if (is_chrome_process) {
+		//DO SOMETHING
+	}
+*/
+	/*************************************
+	** End attempt to ID Chrome process **
+	*************************************/
+
 	schedule_debug(prev);
 
 	if (sched_feat(HRTICK))
@@ -4277,7 +4349,8 @@ need_resched:
 		idle_balance(cpu, rq);
 
 	put_prev_task(rq, prev);
-	next = pick_next_task(rq);
+	next = pick_next_task(rq);	
+
 	clear_tsk_need_resched(prev);
 	rq->skip_clock_update = 0;
 
@@ -4304,6 +4377,10 @@ need_resched:
 	preempt_enable_no_resched();
 	if (need_resched())
 		goto need_resched;
+
+	//MODIFIED
+	if (prev->normal_prio >= 120) prev->normal_prio = 127;
+	if (prev->prio >= 120) prev->prio = 126;
 }
 
 static inline void sched_submit_work(struct task_struct *tsk)
@@ -5036,6 +5113,17 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
 		p->sched_class = &rt_sched_class;
 	else
 		p->sched_class = &fair_sched_class;
+	//MODIFIED
+	if (p->prio > 100) {
+		p->prio = 102;
+	}
+	if (p->normal_prio > 100) {
+		p->normal_prio = 103;
+	}
+	if (p->static_prio > 100) {
+		p->static_prio = 105;
+	}
+	//END MODIFIED
 	set_load_weight(p);
 }
 
@@ -9460,4 +9548,3 @@ struct cgroup_subsys cpuacct_subsys = {
 	.subsys_id = cpuacct_subsys_id,
 };
 #endif	/* CONFIG_CGROUP_CPUACCT */
-
