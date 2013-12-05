@@ -1,3 +1,12 @@
+We went online and found the open source code for the Android kernel (a slightly modified Linux kernel) for the Samsung Galaxy SII.  Combining it with the Cyanogenmod OS source code, we set up VM as a working environment with which we can modify the scheduler of the Android/Linux kernel itself.
+
+We put this modified scheduler on a physical Android, where it runs with noticeable differences.  Specifically, we adjusted the dynamic priorities of running processes, which are normally not accessible to software developers.  We were able to observe these differences by using the "ps -p" command in the Android terminal emulator.
+
+Additionally, we compiled several builds that caused errors in the OS-- overheating and general lack of booting capability.  These taught us as much as, if not more than, the successful builds.  I found the overheating after I made a change that starved a few root processes to be particularly interesting.
+
+
+
+
 	Linux kernel release 3.x <http://kernel.org/>
 
 These are the release notes for Linux version 3.  Read them carefully,
