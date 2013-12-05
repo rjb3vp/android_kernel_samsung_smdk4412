@@ -1,4 +1,4 @@
-/*
+/*  This is the key to the scheduling!
  *  kernel/sched.c
  *
  *  Kernel scheduler and related syscalls
